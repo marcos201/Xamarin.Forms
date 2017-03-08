@@ -31,6 +31,8 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 		VisualElementTracker _visualElementTracker;
 		NotifyCollectionChangedEventHandler _collectionChangeHandler;
 
+		bool _inputTransparent;
+
 		public FrameRenderer() : base(Forms.Context)
 		{
 			_tapGestureHandler = new TapGestureHandler(() => Element);
@@ -69,6 +71,16 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 			}
 		}
 
+		public override bool OnTouchEvent(MotionEvent e)
+		{
+			if (_inputTransparent)
+			{
+				return false;
+			}
+
+			return base.OnTouchEvent(e);
+		}
+
 		void IOnClickListener.OnClick(AView v)
 		{
 			_tapGestureHandler.OnSingleClick();
@@ -83,7 +95,10 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 					ScaleGestureDetectorCompat.SetQuickScaleEnabled(_scaleDetector.Value, true);
 				handled = _scaleDetector.Value.OnTouchEvent(e);
 			}
-			return _gestureDetector.Value.OnTouchEvent(e) || handled;
+			
+			handled = handled || _gestureDetector.Value.OnTouchEvent(e) || !Element.InputTransparent;
+
+			return handled;
 		}
 
 		VisualElement IVisualElementRenderer.Element => Element;
@@ -195,6 +210,7 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 				UpdateShadow();
 				UpdateBackgroundColor();
 				UpdateCornerRadius();
+				UpdateInputTransparent();
 				SubscribeGestureRecognizers(e.NewElement);
 			}
 		}
@@ -228,6 +244,13 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 				UpdateBackgroundColor();
 			else if (e.PropertyName == Frame.CornerRadiusProperty.PropertyName)
 				UpdateCornerRadius();
+			else if (e.PropertyName == VisualElement.InputTransparentProperty.PropertyName)
+				UpdateInputTransparent();
+		}
+
+		void UpdateInputTransparent()
+		{
+			_inputTransparent = Element.InputTransparent;
 		}
 
 		void SubscribeGestureRecognizers(VisualElement element)
