@@ -96,7 +96,9 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 				handled = _scaleDetector.Value.OnTouchEvent(e);
 			}
 			
-			handled = handled || _gestureDetector.Value.OnTouchEvent(e) || !Element.InputTransparent;
+			// It's very important that the gesture detection happen first here
+			// if we check handled first, we might short-circuit and never check for tap/pan
+			handled = _gestureDetector.Value.OnTouchEvent(e) || handled; 
 
 			return handled;
 		}
